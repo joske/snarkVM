@@ -101,6 +101,19 @@ impl Deref for RocksDB {
     }
 }
 
+fn start_stat_recorder(db: Arc<rocksdb::DB>) {
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+            let stats = rocksdb::perf::get_memory_usage_stats(Some(&[&db]), None).unwrap();
+            eprintln!(
+                "RocksDB memory usage stats: \ntable_total: {}\ntable_unflushed: {}\ntable_readers: {}\ncache: {}",
+                stats.mem_table_total, stats.mem_table_unflushed, stats.mem_table_readers_total, stats.cache_total,
+            );
+        }
+    });
+}
+
 impl Database for RocksDB {
     /// Opens the database.
     ///
@@ -128,6 +141,7 @@ impl Database for RocksDB {
 
                     Arc::new(rocksdb::DB::open(&options, primary)?)
                 };
+                start_stat_recorder(rocksdb.clone());
 
                 Ok::<_, anyhow::Error>(RocksDB {
                     rocksdb,

@@ -37,7 +37,7 @@ wasm = [
   "synthesizer-program/wasm",
   "synthesizer-snark/wasm"
 ]
-test = [ ]
+test = [  ]
 
 [dependencies.console]
 package = "snarkvm-console"
@@ -78,6 +78,18 @@ version = "=0.16.19"
 package = "snarkvm-synthesizer-snark"
 path = "../../synthesizer/snark"
 version = "=0.16.19"
+
+[dependencies.tokio]
+version = "1.28"
+features = [
+  "io-util",
+  "macros",
+  "net",
+  "rt-multi-thread",
+  "signal",
+  "sync",
+  "time"
+]
 
 [dependencies.aleo-std-storage]
 version = "0.1.7"
