@@ -152,8 +152,8 @@ impl Database for RocksDB {
                     options.set_max_background_jobs(4);
                     options.create_if_missing(true);
 
-                    options.set_write_buffer_size(32 * 1024 * 1024);
-                    options.set_db_write_buffer_size(32 * 1024 * 1024);
+                    options.set_write_buffer_size(512 * 1024);
+                    options.set_db_write_buffer_size(512 * 1024);
                     // options.set_report_bg_io_stats(true);
                     // options.enable_statistics();
                     // options.set_statistics_level(rocksdb::statistics::StatsLevel::All);
