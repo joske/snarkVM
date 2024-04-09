@@ -101,31 +101,31 @@ impl Deref for RocksDB {
     }
 }
 
-fn start_stat_recorder(db: Arc<rocksdb::DB>, _options: Arc<rocksdb::Options>) {
-    tokio::spawn(async move {
-        loop {
-            tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
-            eprintln!(">>>> RocksDB flush");
-            let _ignore = db.flush();
+// fn start_stat_recorder(db: Arc<rocksdb::DB>, _options: Arc<rocksdb::Options>) {
+//     tokio::spawn(async move {
+//         loop {
+//             tokio::time::sleep(tokio::time::Duration::from_secs(300)).await;
+//             eprintln!(">>>> RocksDB flush");
+//             let _ignore = db.flush();
+//
+// let stats = rocksdb::perf::get_memory_usage_stats(Some(&[&db]), None).unwrap();
+// For reference: https://github.com/rust-rocksdb/rust-rocksdb/pull/853/files
+// let opt_stats = options.get_statistics();
 
-            // let stats = rocksdb::perf::get_memory_usage_stats(Some(&[&db]), None).unwrap();
-            // For reference: https://github.com/rust-rocksdb/rust-rocksdb/pull/853/files
-            // let opt_stats = options.get_statistics();
+// https://docs.rs/rocksdb/latest/rocksdb/statistics/enum.Ticker.html
+// let initial_bytes_written = opts.get_ticker_count(Ticker::BytesWritten);
 
-            // https://docs.rs/rocksdb/latest/rocksdb/statistics/enum.Ticker.html
-            // let initial_bytes_written = opts.get_ticker_count(Ticker::BytesWritten);
-
-            // eprintln!(
-            //     "RocksDB memory usage stats: \ntable_total: {}\ntable_unflushed: {}\ntable_readers: {}\ncache: {}, opt_stats: {:?}\n",
-            //     stats.mem_table_total,
-            //     stats.mem_table_unflushed,
-            //     stats.mem_table_readers_total,
-            //     stats.cache_total,
-            //     opt_stats
-            // );
-        }
-    });
-}
+// eprintln!(
+//     "RocksDB memory usage stats: \ntable_total: {}\ntable_unflushed: {}\ntable_readers: {}\ncache: {}, opt_stats: {:?}\n",
+//     stats.mem_table_total,
+//     stats.mem_table_unflushed,
+//     stats.mem_table_readers_total,
+//     stats.cache_total,
+//     opt_stats
+// );
+//         }
+//     });
+// }
 
 impl Database for RocksDB {
     /// Opens the database.
@@ -152,6 +152,8 @@ impl Database for RocksDB {
                     options.set_max_background_jobs(4);
                     options.create_if_missing(true);
 
+                    options.set_write_buffer_size(32 * 1024 * 1024);
+                    options.set_db_write_buffer_size(32 * 1024 * 1024);
                     // options.set_report_bg_io_stats(true);
                     // options.enable_statistics();
                     // options.set_statistics_level(rocksdb::statistics::StatsLevel::All);
@@ -172,7 +174,7 @@ impl Database for RocksDB {
 
                     Arc::new(rocksdb::DB::open(&options, primary)?)
                 };
-                start_stat_recorder(rocksdb.clone(), Arc::new(options));
+                // start_stat_recorder(rocksdb.clone(), Arc::new(options));
 
                 Ok::<_, anyhow::Error>(RocksDB {
                     rocksdb,
