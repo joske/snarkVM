@@ -29,7 +29,7 @@ use std::{
     },
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MemoryMap<
     K: Copy + Clone + PartialEq + Eq + Hash + Serialize + for<'de> Deserialize<'de> + Send + Sync,
     V: Clone + PartialEq + Eq + Serialize + for<'de> Deserialize<'de> + Send + Sync,
