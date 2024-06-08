@@ -28,7 +28,7 @@ use snarkvm_utilities::{
 };
 
 use anyhow::{anyhow, bail, ensure, Result};
-use parking_lot::RwLock;
+use locktick::parking_lot::RwLock;
 use std::{collections::BTreeMap, ops::Range, sync::Arc};
 
 const NUM_POWERS_15: usize = 1 << 15;

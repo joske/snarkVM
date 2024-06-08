@@ -72,8 +72,9 @@ version = "0.12"
 [dependencies.once_cell]
 version = "1.18"
 
-[dependencies.parking_lot]
-version = "0.12"
+[dependencies.locktick]
+git = "https://github.com/ljedrz/locktick.git"
+features = ["parking_lot", "tokio"]
 
 [dependencies.rand]
 version = "0.8"

@@ -65,7 +65,7 @@ use aleo_std::prelude::{finish, lap, timer};
 use indexmap::{IndexMap, IndexSet};
 use itertools::Either;
 use lru::LruCache;
-use parking_lot::{Mutex, RwLock};
+use locktick::parking_lot::{Mutex, RwLock};
 use rand::{rngs::StdRng, SeedableRng};
 use std::{collections::HashSet, num::NonZeroUsize, sync::Arc};
 

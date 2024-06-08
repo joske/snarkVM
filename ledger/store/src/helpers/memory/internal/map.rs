@@ -19,7 +19,7 @@ use console::network::prelude::*;
 use indexmap::IndexMap;
 
 use core::{borrow::Borrow, hash::Hash};
-use parking_lot::{Mutex, RwLock};
+use locktick::parking_lot::{Mutex, RwLock};
 use std::{
     borrow::Cow,
     collections::{btree_map, BTreeMap},

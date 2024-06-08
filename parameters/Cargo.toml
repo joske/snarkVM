@@ -76,8 +76,9 @@ optional = true
 [dependencies.lazy_static]
 version = "1.4"
 
-[dependencies.parking_lot]
-version = "0.12"
+[dependencies.locktick]
+git = "https://github.com/ljedrz/locktick.git"
+features = ["parking_lot", "tokio"]
 
 [dependencies.paste]
 version = "1"

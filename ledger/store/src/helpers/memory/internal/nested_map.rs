@@ -18,7 +18,7 @@ use crate::helpers::{NestedMap, NestedMapRead};
 use console::network::prelude::*;
 
 use core::hash::Hash;
-use parking_lot::{Mutex, RwLock};
+use locktick::parking_lot::{Mutex, RwLock};
 use std::{
     borrow::Cow,
     collections::{btree_map, BTreeMap, BTreeSet},

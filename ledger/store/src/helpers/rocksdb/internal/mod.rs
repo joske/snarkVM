@@ -27,7 +27,7 @@ mod tests;
 use aleo_std_storage::StorageMode;
 use anyhow::{bail, ensure, Result};
 use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
+use locktick::parking_lot::Mutex;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     borrow::Borrow,
