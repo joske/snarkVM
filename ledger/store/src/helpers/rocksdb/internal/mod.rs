@@ -77,7 +77,7 @@ pub trait Database {
 /// An instance of a RocksDB database.
 pub struct RocksDB {
     /// The RocksDB instance.
-    rocksdb: Arc<rocksdb::DB>,
+    pub(crate) rocksdb: Arc<rocksdb::DB>,
     /// The network ID.
     network_id: u16,
     /// The storage mode.
