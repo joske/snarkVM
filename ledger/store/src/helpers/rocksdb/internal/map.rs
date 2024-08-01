@@ -276,17 +276,21 @@ impl<
 
         // Count the number of keys belonging to the map.
         let mut len = 0usize;
-        while let Some(key) = iter.key() {
-            // Only compare the map ID - the network ID is guaranteed to
-            // remain the same as long as there is more than a single map.
-            if key[2..][..2] != self.context[2..][..2] {
-                // If the map ID is different, it's the end of iteration.
+        while iter.valid() {
+            if let Some(key) = iter.key() {
+                // Only compare the map ID - the network ID is guaranteed to
+                // remain the same as long as there is more than a single map.
+                if key[2..][..2] != self.context[2..][..2] {
+                    // If the map ID is different, it's the end of iteration.
+                    break;
+                }
+
+                // Increment the length and go to the next record.
+                len += 1;
+                iter.next();
+            } else {
                 break;
             }
-
-            // Increment the length and go to the next record.
-            len += 1;
-            iter.next();
         }
 
         len
@@ -400,7 +404,7 @@ pub struct Iter<
     K: 'a + Debug + PartialEq + Eq + Hash + Serialize + DeserializeOwned,
     V: 'a + PartialEq + Eq + Serialize + DeserializeOwned,
 > {
-    db_iter: rocksdb::DBIterator<'a>,
+    db_iter: rocksdb::DBRawIterator<'a>,
     _phantom: PhantomData<(K, V)>,
 }
 
@@ -411,7 +415,7 @@ impl<
 > Iter<'a, K, V>
 {
     pub(super) fn new(db_iter: rocksdb::DBIterator<'a>) -> Self {
-        Self { db_iter, _phantom: PhantomData }
+        Self { db_iter: db_iter.into(), _phantom: PhantomData }
     }
 }
 
@@ -424,13 +428,11 @@ impl<
     type Item = (Cow<'a, K>, Cow<'a, V>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (key, value) = self
-            .db_iter
-            .next()?
-            .map_err(|e| {
-                error!("RocksDB Iter iterator error: {e}");
-            })
-            .ok()?;
+        if !self.db_iter.valid() {
+            return None;
+        }
+
+        let (key, value) = self.db_iter.item()?;
 
         // Deserialize the key and value.
         let key = bincode::deserialize(&key[PREFIX_LEN..])
@@ -438,11 +440,13 @@ impl<
                 error!("RocksDB Iter deserialize(key) error: {e}");
             })
             .ok()?;
-        let value = bincode::deserialize(&value)
+        let value = bincode::deserialize(value)
             .map_err(|e| {
                 error!("RocksDB Iter deserialize(value) error: {e}");
             })
             .ok()?;
+
+        self.db_iter.next();
 
         Some((Cow::Owned(key), Cow::Owned(value)))
     }
@@ -450,13 +454,13 @@ impl<
 
 /// An iterator over the keys of a prefix.
 pub struct Keys<'a, K: 'a + Debug + PartialEq + Eq + Hash + Serialize + DeserializeOwned> {
-    db_iter: rocksdb::DBIterator<'a>,
+    db_iter: rocksdb::DBRawIterator<'a>,
     _phantom: PhantomData<K>,
 }
 
 impl<'a, K: 'a + Debug + PartialEq + Eq + Hash + Serialize + DeserializeOwned> Keys<'a, K> {
     pub(crate) fn new(db_iter: rocksdb::DBIterator<'a>) -> Self {
-        Self { db_iter, _phantom: PhantomData }
+        Self { db_iter: db_iter.into(), _phantom: PhantomData }
     }
 }
 
@@ -464,20 +468,18 @@ impl<'a, K: 'a + Clone + Debug + PartialEq + Eq + Hash + Serialize + Deserialize
     type Item = Cow<'a, K>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (key, _) = self
-            .db_iter
-            .next()?
-            .map_err(|e| {
-                error!("RocksDB Keys iterator error: {e}");
-            })
-            .ok()?;
+        if !self.db_iter.valid() {
+            return None;
+        }
 
         // Deserialize the key.
-        let key = bincode::deserialize(&key[PREFIX_LEN..])
+        let key = bincode::deserialize(&self.db_iter.key()?[PREFIX_LEN..])
             .map_err(|e| {
                 error!("RocksDB Keys deserialize(key) error: {e}");
             })
             .ok()?;
+
+        self.db_iter.next();
 
         Some(Cow::Owned(key))
     }
@@ -485,13 +487,13 @@ impl<'a, K: 'a + Clone + Debug + PartialEq + Eq + Hash + Serialize + Deserialize
 
 /// An iterator over the values of a prefix.
 pub struct Values<'a, V: 'a + PartialEq + Eq + Serialize + DeserializeOwned> {
-    db_iter: rocksdb::DBIterator<'a>,
+    db_iter: rocksdb::DBRawIterator<'a>,
     _phantom: PhantomData<V>,
 }
 
 impl<'a, V: 'a + PartialEq + Eq + Serialize + DeserializeOwned> Values<'a, V> {
     pub(crate) fn new(db_iter: rocksdb::DBIterator<'a>) -> Self {
-        Self { db_iter, _phantom: PhantomData }
+        Self { db_iter: db_iter.into(), _phantom: PhantomData }
     }
 }
 
@@ -499,20 +501,18 @@ impl<'a, V: 'a + Clone + PartialEq + Eq + Serialize + DeserializeOwned> Iterator
     type Item = Cow<'a, V>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (_, value) = self
-            .db_iter
-            .next()?
-            .map_err(|e| {
-                error!("RocksDB Values iterator error: {e}");
-            })
-            .ok()?;
+        if !self.db_iter.valid() {
+            return None;
+        }
 
         // Deserialize the value.
-        let value = bincode::deserialize(&value)
+        let value = bincode::deserialize(self.db_iter.value()?)
             .map_err(|e| {
                 error!("RocksDB Values deserialize(value) error: {e}");
             })
             .ok()?;
+
+        self.db_iter.next();
 
         Some(Cow::Owned(value))
     }
